@@ -1,0 +1,151 @@
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.Scanner;
+
+public class ImageProcessing {
+	
+	public int numRows, numCols, minVal, maxVal, newMinVal, newMaxVal;
+	
+	public int[][] zeroFramedArray;
+	
+	public int[][] skeletonArray;
+	
+	public ImageProcessing() {
+		numRows = numCols = minVal = maxVal = newMinVal = newMaxVal = 0;
+	}
+	
+	public void loadImage(String in) throws FileNotFoundException {
+		File inFile = new File(in);
+		Scanner s = new Scanner(inFile);
+		numRows = s.nextInt();
+		numCols = s.nextInt();
+		minVal = s.nextInt();
+		maxVal = s.nextInt();
+		zeroFramedArray = new int[numRows + 2][numCols + 2];
+		for (int i = 0; i < numRows + 2; i++) {
+			for (int j = 0; j < numCols + 2; j++) {
+				zeroFramedArray[i][j] = 0;
+			}
+		}
+		skeletonArray = new int[numRows + 2][numCols + 2];
+		for (int i = 0; i < numRows + 2; i++) {
+			for (int j = 0; j < numCols + 2; j++) {
+				skeletonArray[i][j] = 0;
+			}
+		}
+		int row = 1;
+		int col = 1;
+		while (s.hasNextInt()) {
+			int value = s.nextInt();
+			zeroFramedArray[row][col] = value;
+			if (col == numCols) {
+				col = 1;
+				row++;
+			} else
+				col++;
+		}
+		s.close();
+		zeroFrame();
+	}
+	
+	public void zeroFrame() {
+		for (int i = 0; i < numRows + 2; i++) {
+			zeroFramedArray[i][0] = 0;
+			zeroFramedArray[i][numCols + 1] = 0;
+		}
+		for (int i = 0; i < numCols + 2; i++) {
+			zeroFramedArray[0][i] = 0;
+			zeroFramedArray[numRows + 1][i] = 0;
+		}
+	}
+	
+	public void firstPassDistance() {
+		for (int i = 1; i < numRows + 1; i++) {
+			for (int j = 1; j < numCols + 1; j++) {
+				if (zeroFramedArray[i][j] > 0) {
+					zeroFramedArray[i][j] = Math.min(zeroFramedArray[i - 1][j - 1], Math.min(zeroFramedArray[i - 1][j],
+					    Math.min(zeroFramedArray[i - 1][j + 1], zeroFramedArray[i][j - 1]))) + 1;
+				}
+			}
+		}
+	}
+	
+	public void prettyPrintDistance(BufferedWriter writer) throws IOException {
+		writer.write(String.valueOf(numRows + " " + numCols + " " + newMinVal + " " + newMaxVal));
+		writer.newLine();
+		for (int i = 1; i < numRows + 1; i++) {
+			for (int j = 1; j < numCols + 1; j++) {
+				if (zeroFramedArray[i][j] == 0)
+					writer.write(String.valueOf("  "));
+				else if (zeroFramedArray[i][j] < 10)
+					writer.write(String.valueOf(" " + zeroFramedArray[i][j]));
+				else
+					writer.write(String.valueOf(zeroFramedArray[i][j]));
+			}
+			writer.newLine();
+		}
+	}
+	
+	public void printResult(BufferedWriter writer, int[][] frame) throws IOException {
+		writer.write(String.valueOf(numRows + " " + numCols + " " + newMinVal + " " + newMaxVal));
+		writer.newLine();
+		for (int i = 1; i < numRows + 1; i++) {
+			for (int j = 1; j < numCols + 1; j++) {
+				writer.write(String.valueOf(frame[i][j]));
+			}
+			writer.newLine();
+		}
+	}
+	public void secondPassDistance() {
+		newMinVal = numRows + numCols;
+		newMaxVal = 0;
+		for (int i = numRows; i > 0; i--) {
+			for (int j = numCols; j > 0; j--) {
+				
+				if (zeroFramedArray[i][j] > 0) {
+					zeroFramedArray[i][j] = Math.min(
+					    Math.min(zeroFramedArray[i + 1][j + 1],
+					        Math.min(zeroFramedArray[i + 1][j],
+					            Math.min(zeroFramedArray[i + 1][j - 1], zeroFramedArray[i][j + 1]))) + 1,
+					    zeroFramedArray[i][j]);
+				}
+				if (zeroFramedArray[i][j] > newMaxVal)
+					newMaxVal = zeroFramedArray[i][j];
+				if (zeroFramedArray[i][j] < newMinVal)
+					newMinVal = zeroFramedArray[i][j];
+			}
+		}
+	}
+	
+	public void computeSkeleton() {
+		for (int i = 1; i < numRows + 1; i++) {
+			for (int j = 1; j < numCols + 1; j++) {
+				if (zeroFramedArray[i][j] > 0) {
+					if (zeroFramedArray[i][j] >= zeroFramedArray[i][j + 1]
+					        && zeroFramedArray[i][j] >= zeroFramedArray[i][j - 1]
+					        && zeroFramedArray[i][j] >= zeroFramedArray[i - 1][j]
+					        && zeroFramedArray[i][j] >= zeroFramedArray[i + 1][j]) {
+						skeletonArray[i][j] = zeroFramedArray[i][j];
+					}
+				} else
+					skeletonArray[i][j] = 0;
+			}
+		}
+	}
+	
+	public void prettyPrintSkeleton(BufferedWriter writer) throws IOException {
+		writer.write(String.valueOf(numRows + " " + numCols + " " + newMinVal + " " + newMaxVal));
+		writer.newLine();
+		for (int i = 1; i < numRows + 1; i++) {
+			for (int j = 1; j < numCols + 1; j++) {
+				if (skeletonArray[i][j] == 0)
+					writer.write(String.valueOf(" "));
+				else
+					writer.write(String.valueOf(1));
+			}
+			writer.newLine();
+		}
+	}
+}
