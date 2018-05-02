@@ -1,0 +1,29 @@
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+
+public class Main {
+	
+	public static void main(String[] args) throws IOException {
+		ImageProcessing image = new ImageProcessing();
+		image.loadImage(args[0]);
+		image.firstPassDistance();
+		FileWriter file = new FileWriter(args[3]);
+		BufferedWriter writer = new BufferedWriter(file);
+		FileWriter file2 = new FileWriter(args[1]);
+		BufferedWriter writer2 = new BufferedWriter(file2);
+		FileWriter file3 = new FileWriter(args[2]);
+		BufferedWriter writer3 = new BufferedWriter(file3);
+		image.prettyPrintDistance(writer);
+		image.secondPassDistance();
+		image.printResult(writer2, image.zeroFramedArray);
+		image.prettyPrintDistance(writer);
+		image.computeSkeleton();
+		image.printResult(writer3, image.skeletonArray);
+		image.prettyPrintSkeleton(writer);
+		writer.close();
+		writer2.close();
+		writer3.close();
+	}
+	
+}
